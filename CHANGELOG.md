@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- **A `date` order and a date filter for the Agents panel.** The new `date`
+  order is flat, newest first, with a header per day: Today, Yesterday,
+  Last 7 days, Older, and No activity for agents that have not worked yet.
+  It joins the `view-toggle` cycle (active, recent, date, off) and the
+  settings popup's `order` row. A new `view-filter` action cycles all,
+  today, 3 days and 7 days over any order, counted in local calendar days;
+  agents with no activity stamp stay visible, because a missing stamp says
+  nothing about age. The panel label shows the filter (`recent · today`).
+
 ## 1.3.20 — 2026-09-28
 
 - **`row_label` says what names a row.** `show_tab = true` put the tab's
