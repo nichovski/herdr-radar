@@ -67,9 +67,15 @@ command = ["node", "bin/agent-state.js", "--stop"]
 # command.
 [[actions]]
 id = "view-toggle"
-title = "Agents: cycle order (active / recent / off)"
-description = "Cycle the Agents panel: grouped by activity, flat by activity, or the panel's own order."
+title = "Agents: cycle order (active / recent / date / off)"
+description = "Cycle the Agents panel: grouped by activity, flat by activity, flat under day headers, or the panel's own order."
 command = ["node", "bin/agent-view.js"]
+
+[[actions]]
+id = "view-filter"
+title = "Agents: date filter (all / today / 3 days / 7 days)"
+description = "Show only agents active in the last N calendar days. Works with every order; no effect while the order is off."
+command = ["node", "bin/agent-view.js", "--filter"]
 
 [[actions]]
 id = "view-flip"

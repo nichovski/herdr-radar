@@ -5,11 +5,13 @@ require('../lib/node-version');
 
 // Cycle the Agents panel between this plugin's orders and Herdr's own.
 //
-//   node bin/agent-view.js            cycle: off -> active -> recent -> off
+//   node bin/agent-view.js            cycle: off -> active -> recent -> date -> off
 //   node bin/agent-view.js --flip     active <-> recent (never lands on off)
 //   node bin/agent-view.js --native   everything Herdr's way <-> everything ours
 //   node bin/agent-view.js --active   grouped, both levels by last activity
 //   node bin/agent-view.js --recent   flat, every pane by last activity
+//   node bin/agent-view.js --date     flat, under Today / Yesterday / ... headers
+//   node bin/agent-view.js --filter   date filter: all -> today -> 3 days -> 7 days
 //   node bin/agent-view.js --off      back to Herdr's own order
 //   node bin/agent-view.js --reapply  startup: restore whatever was chosen
 //
@@ -40,6 +42,7 @@ const { detachedNode } = require('../lib/spawn');
 const SAID = {
   grouped: 'agent view: active (grouped, recent first)',
   recent: 'agent view: recent (flat)',
+  date: 'agent view: date (flat, by day)',
   null: 'agent view: back to panel order',
 };
 
@@ -60,15 +63,17 @@ async function standalone(flag, message, current) {
   // is the fix, and the alternative ordering can lose the override silently.
   if (flag === '--native') view.setRows(Boolean(next));
 
-  const reply = next ? await view.apply(next) : await view.clear();
+  const filter = message.op === 'filter' ? view.nextFilter(view.filter()) : view.filter();
+  const reply = next ? await view.apply(next, filter) : await view.clear();
   if (!reply || reply.error) {
     console.log(`agent view: ${next ? 'set' : 'clear'} failed${reply?.error ? ` (${reply.error.code})` : ''}`);
     process.exitCode = 1;
     return;
   }
   if (flag !== '--reapply') view.setMode(next);
+  if (message.op === 'filter') view.setFilter(filter);
   wakeAnimator();
-  console.log(SAID[next]);
+  console.log(message.op === 'filter' ? `agent view: filter ${filter}` : SAID[next]);
 }
 
 async function main() {
@@ -88,15 +93,20 @@ async function main() {
           ? { cmd: 'view', set: 'grouped' }
           : flag === '--recent'
             ? { cmd: 'view', set: 'recent' }
-            : flag === '--off'
-              ? { cmd: 'view', set: 'off' }
-              : flag === '--reapply'
-                ? { cmd: 'view', set: current }
-                : { cmd: 'view', op: 'cycle' };
+            : flag === '--date'
+              ? { cmd: 'view', set: 'date' }
+              : flag === '--filter'
+                ? { cmd: 'view', op: 'filter' }
+                : flag === '--off'
+                  ? { cmd: 'view', set: 'off' }
+                  : flag === '--reapply'
+                    ? { cmd: 'view', set: current }
+                    : { cmd: 'view', op: 'cycle' };
 
   const reply = await control.request(message, 3000);
-  if (reply?.ok && reply.applied) {
-    console.log(SAID[reply.mode]);
+  // A daemon from before the filter existed answers `applied` without one.
+  if (reply?.ok && reply.applied && (flag !== '--filter' || reply.filter)) {
+    console.log(flag === '--filter' ? `agent view: filter ${reply.filter}` : SAID[reply.mode]);
     return;
   }
   await standalone(flag, message, current);
