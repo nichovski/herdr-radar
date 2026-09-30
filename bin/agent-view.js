@@ -104,7 +104,8 @@ async function main() {
                     : { cmd: 'view', op: 'cycle' };
 
   const reply = await control.request(message, 3000);
-  if (reply?.ok && reply.applied) {
+  // A daemon from before the filter existed answers `applied` without one.
+  if (reply?.ok && reply.applied && (flag !== '--filter' || reply.filter)) {
     console.log(flag === '--filter' ? `agent view: filter ${reply.filter}` : SAID[reply.mode]);
     return;
   }
