@@ -93,7 +93,9 @@ async function main() {
   // from the first server start.
   if (flag === '--reapply' && !current) return;
 
-  const named = flag === '--filter' ? process.argv[process.argv.indexOf('--filter') + 1] : undefined;
+  // Only a real filter name counts as "set it"; anything else stays a cycle.
+  const arg = flag === '--filter' ? process.argv[process.argv.indexOf('--filter') + 1] : undefined;
+  const named = ['all', ...Object.keys(view.FILTERS)].includes(arg) ? arg : undefined;
 
   const message =
     flag === '--flip'

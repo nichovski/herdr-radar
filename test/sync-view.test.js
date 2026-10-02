@@ -101,5 +101,6 @@ test('manifest: every sync action exists and carries --synced', () => {
   const ids = blocks.map((block) => block.match(/^id = "(.+)"/m)[1]).sort();
   const wanted = [...Object.values(sync.MODE_ACTION), ...['all', 'today', '3d', '7d'].map((f) => `sync-filter-${f}`)];
   assert.deepEqual(ids, wanted.sort());
-  for (const block of blocks) assert.match(block.match(/^command = .*$/m)[0], /"--synced"/);
+  // Last, so the order/filter flag is still the first `--` argument agent-view.js sees.
+  for (const block of blocks) assert.match(block.match(/^command = .*$/m)[0], /"--synced"\]$/);
 });
