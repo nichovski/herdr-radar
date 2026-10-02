@@ -230,6 +230,7 @@ async function applyView({ panelOn, panelChanged, order }) {
   const reply = mode ? await view.apply(mode) : await view.clear();
   if (!reply || reply.error) throw new Error('could not switch the Agents panel order');
   view.setMode(mode);
+  detachedNode(path.join(__dirname, 'sync-view.js'));
 }
 
 // TOML text for a value: numbers bare, everything else double-quoted.
