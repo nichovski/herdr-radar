@@ -11,7 +11,7 @@ const LIST = JSON.stringify([
   { id: 'bbb', label: 'Old', target: 'y', session: 's', enabled: false, selected: false },
 ]);
 const ok = (stdout = '') => ({ status: 0, stdout });
-const invoke = (id, action) => ['--machine', id, 'plugin', 'action', 'invoke', '--plugin', pluginId(), action];
+const invoke = (id, action) => ['--machine', id, 'plugin', 'action', 'invoke', `${pluginId()}.${action}`];
 
 // A fake exec: records every call, answers the list and then `answer(args)`.
 function fake(list, answer = () => ok()) {
@@ -46,10 +46,10 @@ test('machines: no JSON, failed exit, or timeout means no machines', () => {
 
 test('commands: order then filter, by machine id', () => {
   const actions = (mode, filter) => sync.commands(mode, filter, 'aaa').map((args) => args.at(-1));
-  assert.deepEqual(actions('grouped', 'all'), ['sync-active', 'sync-filter-all']);
-  assert.deepEqual(actions('recent', 'today'), ['sync-recent', 'sync-filter-today']);
-  assert.deepEqual(actions('date', '7d'), ['sync-date', 'sync-filter-7d']);
-  assert.deepEqual(actions(null, '3d'), ['sync-off', 'sync-filter-3d']);
+  assert.deepEqual(actions('grouped', 'all'), [`${pluginId()}.sync-active`, `${pluginId()}.sync-filter-all`]);
+  assert.deepEqual(actions('recent', 'today'), [`${pluginId()}.sync-recent`, `${pluginId()}.sync-filter-today`]);
+  assert.deepEqual(actions('date', '7d'), [`${pluginId()}.sync-date`, `${pluginId()}.sync-filter-7d`]);
+  assert.deepEqual(actions(null, '3d'), [`${pluginId()}.sync-off`, `${pluginId()}.sync-filter-3d`]);
   assert.deepEqual(sync.commands('date', '3d', 'aaa')[0], invoke('aaa', 'sync-date'));
 });
 
@@ -63,7 +63,7 @@ test('push: a failed order action skips that machine filter action and logs one 
   const { calls, exec } = fake(list, (args) => (args[1] === 'aaa' ? { status: 1 } : ok()));
   const lines = [];
   sync.push('recent', '3d', { exec, log: (line) => lines.push(line) });
-  assert.deepEqual(lines, ['Asus PC: sync-recent failed (exit 1)']);
+  assert.deepEqual(lines, [`Asus PC: ${pluginId()}.sync-recent failed (exit 1)`]);
   assert.deepEqual(calls.slice(1), [
     invoke('aaa', 'sync-recent'),
     invoke('ccc', 'sync-recent'),
@@ -75,7 +75,7 @@ test('push: a timeout is a failure and logs ETIMEDOUT', () => {
   const { exec } = fake(ok(LIST), () => ({ status: null, error: { code: 'ETIMEDOUT' } }));
   const lines = [];
   sync.push('grouped', 'all', { exec, log: (line) => lines.push(line) });
-  assert.deepEqual(lines, ['Asus PC: sync-active failed (ETIMEDOUT)']);
+  assert.deepEqual(lines, [`Asus PC: ${pluginId()}.sync-active failed (ETIMEDOUT)`]);
 });
 
 test('push: dry run logs the exact commands and runs only the list', () => {
@@ -84,8 +84,8 @@ test('push: dry run logs the exact commands and runs only the list', () => {
   sync.push('recent', '3d', { exec, log: (line) => lines.push(line), dryRun: true });
   assert.equal(calls.length, 1);
   assert.equal(lines.length, 2);
-  assert.ok(lines[0].endsWith(`${pluginId()} sync-recent  # Asus PC`));
-  assert.ok(lines[1].endsWith(`${pluginId()} sync-filter-3d  # Asus PC`));
+  assert.ok(lines[0].endsWith(`${pluginId()}.sync-recent  # Asus PC`));
+  assert.ok(lines[1].endsWith(`${pluginId()}.sync-filter-3d  # Asus PC`));
 });
 
 test('pushes: false for --synced and --reapply, true for --flip and --filter', () => {
