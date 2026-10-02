@@ -168,6 +168,14 @@ const FIELDS = [
     help: 'The mark on a worktree header, after the branch corner. Enter a codepoint like U+F418, or empty for none.',
   },
   {
+    key: 'machine_mark',
+    kind: 'glyph',
+    // The effective default, so it depends on the OS (lib/config.js). An
+    // unset key stays undefined in the values map, so showing it writes nothing.
+    fallback: config.machineMark,
+    help: "A system icon at the start of every row, so sessions from another machine stand out. Enter a codepoint like U+F17A, or empty for none. Defaults to this system's icon.",
+  },
+  {
     key: 'follow_appearance',
     kind: 'bool',
     fallback: true,
