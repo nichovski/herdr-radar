@@ -12,6 +12,8 @@ require('../lib/node-version');
 //   node bin/agent-view.js --recent   flat, every pane by last activity
 //   node bin/agent-view.js --date     flat, under Today / Yesterday / ... headers
 //   node bin/agent-view.js --filter   date filter: all -> today -> 3 days -> 7 days
+//   node bin/agent-view.js --filter <all|today|3d|7d>   set that filter (sync actions)
+//   node bin/agent-view.js ... --synced   change came from another machine: do not push it on
 //   node bin/agent-view.js --off      back to Herdr's own order
 //   node bin/agent-view.js --reapply  startup: restore whatever was chosen
 //
@@ -34,6 +36,7 @@ require('../lib/node-version');
 const path = require('node:path');
 
 const view = require('../lib/view');
+const sync = require('../lib/sync');
 const control = require('../lib/control');
 const { pluginConfigDir } = require('../lib/paths');
 const { pluginId } = require('../lib/herdr');
@@ -55,6 +58,11 @@ function wakeAnimator() {
   detachedNode(path.join(__dirname, 'agent-state.js'), [], { env });
 }
 
+// Hand the saved state to the other machines; the worker runs detached.
+function pushToMachines() {
+  if (sync.pushes(process.argv)) detachedNode(path.join(__dirname, 'sync-view.js'));
+}
+
 async function standalone(flag, message, current) {
   const next = view.resolve(current, message);
 
@@ -63,7 +71,7 @@ async function standalone(flag, message, current) {
   // is the fix, and the alternative ordering can lose the override silently.
   if (flag === '--native') view.setRows(Boolean(next));
 
-  const filter = message.op === 'filter' ? view.nextFilter(view.filter()) : view.filter();
+  const filter = view.targetFilter(message);
   const reply = next ? await view.apply(next, filter) : await view.clear();
   if (!reply || reply.error) {
     console.log(`agent view: ${next ? 'set' : 'clear'} failed${reply?.error ? ` (${reply.error.code})` : ''}`);
@@ -74,6 +82,7 @@ async function standalone(flag, message, current) {
   if (message.op === 'filter') view.setFilter(filter);
   wakeAnimator();
   console.log(message.op === 'filter' ? `agent view: filter ${filter}` : SAID[next]);
+  pushToMachines();
 }
 
 async function main() {
@@ -83,6 +92,10 @@ async function main() {
   // `active` (lib/view.js DEFAULT_MODE), so a fresh install sorts by activity
   // from the first server start.
   if (flag === '--reapply' && !current) return;
+
+  // Only a real filter name counts as "set it"; anything else stays a cycle.
+  const arg = flag === '--filter' ? process.argv[process.argv.indexOf('--filter') + 1] : undefined;
+  const named = ['all', ...Object.keys(view.FILTERS)].includes(arg) ? arg : undefined;
 
   const message =
     flag === '--flip'
@@ -96,7 +109,7 @@ async function main() {
             : flag === '--date'
               ? { cmd: 'view', set: 'date' }
               : flag === '--filter'
-                ? { cmd: 'view', op: 'filter' }
+                ? { cmd: 'view', op: 'filter', filter: named }
                 : flag === '--off'
                   ? { cmd: 'view', set: 'off' }
                   : flag === '--reapply'
@@ -104,9 +117,11 @@ async function main() {
                     : { cmd: 'view', op: 'cycle' };
 
   const reply = await control.request(message, 3000);
-  // A daemon from before the filter existed answers `applied` without one.
-  if (reply?.ok && reply.applied && (flag !== '--filter' || reply.filter)) {
+  // A daemon from before the filter existed answers `applied` without one, and
+  // an older one cycles instead of setting a named filter.
+  if (reply?.ok && reply.applied && (flag !== '--filter' || reply.filter) && (!named || reply.filter === named)) {
     console.log(flag === '--filter' ? `agent view: filter ${reply.filter}` : SAID[reply.mode]);
+    pushToMachines();
     return;
   }
   await standalone(flag, message, current);

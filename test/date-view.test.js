@@ -165,3 +165,10 @@ test('a non-purge clearAll keeps day_age with the other sort keys', async (t) =>
   assert.ok(cleared.includes('tab_key'));
   assert.equal(cleared.includes('day_age'), false);
 });
+
+test('targetFilter: a named filter wins, a bad name cycles, no op keeps the saved one', () => {
+  assert.equal(view.targetFilter({ op: 'filter', filter: '3d' }), '3d');
+  assert.equal(view.targetFilter({ op: 'filter', filter: 'nope' }), view.nextFilter(view.filter()));
+  assert.equal(view.targetFilter({ op: 'filter' }), view.nextFilter(view.filter()));
+  assert.equal(view.targetFilter({ set: 'recent' }), view.filter());
+});

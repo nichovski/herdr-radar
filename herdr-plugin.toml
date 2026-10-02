@@ -99,6 +99,57 @@ title = "Agents: Herdr's panel <-> ours"
 description = "Toggle the whole Agents panel — order and row colours — between Herdr's own and the plugin's."
 command = ["node", "bin/agent-view.js", "--native"]
 
+# Run by ANOTHER machine's herdr-radar to copy its Agents panel order and filter
+# here (lib/sync.js). Plugin actions take no arguments, so each state is its own
+# action. `--synced` keeps them from pushing on: no key is bound to these.
+[[actions]]
+id = "sync-active"
+title = "Sync from another machine: order active"
+description = "Run by another machine's herdr-radar so this panel matches it. Sets this machine only and never pushes on."
+command = ["node", "bin/agent-view.js", "--active", "--synced"]
+
+[[actions]]
+id = "sync-recent"
+title = "Sync from another machine: order recent"
+description = "Run by another machine's herdr-radar so this panel matches it. Sets this machine only and never pushes on."
+command = ["node", "bin/agent-view.js", "--recent", "--synced"]
+
+[[actions]]
+id = "sync-date"
+title = "Sync from another machine: order date"
+description = "Run by another machine's herdr-radar so this panel matches it. Sets this machine only and never pushes on."
+command = ["node", "bin/agent-view.js", "--date", "--synced"]
+
+[[actions]]
+id = "sync-off"
+title = "Sync from another machine: order off"
+description = "Run by another machine's herdr-radar so this panel matches it. Sets this machine only and never pushes on."
+command = ["node", "bin/agent-view.js", "--off", "--synced"]
+
+[[actions]]
+id = "sync-filter-all"
+title = "Sync from another machine: filter all"
+description = "Run by another machine's herdr-radar so this panel matches it. Sets this machine only and never pushes on."
+command = ["node", "bin/agent-view.js", "--filter", "all", "--synced"]
+
+[[actions]]
+id = "sync-filter-today"
+title = "Sync from another machine: filter today"
+description = "Run by another machine's herdr-radar so this panel matches it. Sets this machine only and never pushes on."
+command = ["node", "bin/agent-view.js", "--filter", "today", "--synced"]
+
+[[actions]]
+id = "sync-filter-3d"
+title = "Sync from another machine: filter 3 days"
+description = "Run by another machine's herdr-radar so this panel matches it. Sets this machine only and never pushes on."
+command = ["node", "bin/agent-view.js", "--filter", "3d", "--synced"]
+
+[[actions]]
+id = "sync-filter-7d"
+title = "Sync from another machine: filter 7 days"
+description = "Run by another machine's herdr-radar so this panel matches it. Sets this machine only and never pushes on."
+command = ["node", "bin/agent-view.js", "--filter", "7d", "--synced"]
+
 # Runs when Herdr installs the plugin from GitHub (shown in the install
 # preview): writes the managed blocks and installs the icon font. It must
 # not start the daemon: the hook runs inside Herdr's temporary checkout,

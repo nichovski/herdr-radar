@@ -154,10 +154,26 @@ const FIELDS = [
     help: 'Drop the workspace name from a title when the header above already shows it.',
   },
   {
+    key: 'machine_name',
+    kind: 'text',
+    // The label the group headers carry, and the only key here whose default
+    // depends on the machine: this host's own name (lib/config.js).
+    fallback: config.machineName,
+    help: "Which machine a group runs on, shown in its header. Empty = no machine. Defaults to this machine's name.",
+  },
+  {
     key: 'worktree_mark',
     kind: 'glyph',
     fallback: '\uf418',
     help: 'The mark on a worktree header, after the branch corner. Enter a codepoint like U+F418, or empty for none.',
+  },
+  {
+    key: 'machine_mark',
+    kind: 'glyph',
+    // The default depends on the OS (lib/config.js). An unset key stays
+    // undefined in the values map, so showing it writes nothing.
+    fallback: config.defaultMachineMark(),
+    help: "A system icon at the start of every row, so sessions from another machine stand out. Enter a codepoint like U+F17A, or empty for none. Defaults to this system's icon.",
   },
   {
     key: 'follow_appearance',
@@ -222,6 +238,7 @@ async function applyView({ panelOn, panelChanged, order }) {
   const reply = mode ? await view.apply(mode) : await view.clear();
   if (!reply || reply.error) throw new Error('could not switch the Agents panel order');
   view.setMode(mode);
+  detachedNode(path.join(__dirname, 'sync-view.js'));
 }
 
 // TOML text for a value: numbers bare, everything else double-quoted.
