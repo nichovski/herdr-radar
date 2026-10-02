@@ -30,17 +30,17 @@ function readMark(toml) {
 }
 
 test('the default follows the platform', () => {
-  const mark = (platform) => config.machineMarkSetting(platform);
-  assert.equal(mark('win32'), '');
-  assert.equal(mark('linux'), '');
-  assert.equal(mark('darwin'), '');
-  assert.equal(mark('freebsd'), '');
+  const mark = (platform) => config.defaultMachineMark(platform);
+  assert.equal(mark('win32'), '\uf17a');
+  assert.equal(mark('linux'), '\uf17c');
+  assert.equal(mark('darwin'), '\uf179');
+  assert.equal(mark('freebsd'), '\uf108');
 });
 
 test('machine_mark overrides the default, and empty turns it off', () => {
   assert.equal(readMark('machine_mark = "X"\n'), 'X');
   assert.equal(readMark('machine_mark = ""\n'), '');
-  assert.equal(readMark(''), config.machineMarkSetting());
+  assert.equal(readMark(''), config.defaultMachineMark());
 });
 
 test('composeLine puts the mark first, then the spinner', (t) => {

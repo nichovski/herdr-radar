@@ -170,9 +170,9 @@ const FIELDS = [
   {
     key: 'machine_mark',
     kind: 'glyph',
-    // The effective default, so it depends on the OS (lib/config.js). An
-    // unset key stays undefined in the values map, so showing it writes nothing.
-    fallback: config.machineMark,
+    // The default depends on the OS (lib/config.js). An unset key stays
+    // undefined in the values map, so showing it writes nothing.
+    fallback: config.defaultMachineMark(),
     help: "A system icon at the start of every row, so sessions from another machine stand out. Enter a codepoint like U+F17A, or empty for none. Defaults to this system's icon.",
   },
   {
